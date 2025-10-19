@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/design/app_colors.dart';
+import '../../core/format/currency.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -149,7 +150,7 @@ class _ProductTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Text(
-              _formatCurrency(p.price),
+              CurrencyFormatter.format(p.price),
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.primary,
@@ -176,8 +177,7 @@ class _ProductTile extends StatelessWidget {
   }
 }
 
-// Currency formatter
-String _formatCurrency(double v) => '\$${v.toStringAsFixed(2)}';
+// Currency formatter replaced by CurrencyFormatter (INR)
 
 class _ProductVM {
   final String name;

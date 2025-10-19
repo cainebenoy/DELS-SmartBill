@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/shell/home_shell.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   runApp(const SmartBillApp());
@@ -16,6 +17,16 @@ class SmartBillApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
+      locale: const Locale('en', 'IN'),
+      supportedLocales: const [
+        Locale('en', 'IN'),
+        Locale('en'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: const HomeShell(),
     );
   }
