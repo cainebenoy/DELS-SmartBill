@@ -1,0 +1,52 @@
+# Flutter/Dart
+**/build/
+.dart_tool/
+.packages
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool/
+coverage/
+
+# IntelliJ/VS Code
+.idea/
+.vscode/
+*.iml
+
+# iOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework/
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# Android
+**/android/.gradle/
+**/android/app/build/
+**/android/local.properties
+**/android/key.properties
+
+# Web
+**/web/.dart_tool/
+
+# MacOS/Linux/Windows build
+**/macos/Flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+
+# Env & secrets
+.env
+.env.*
+.config/*.env
+*.key
+*.keystore
+*.jks
+
+# Logs
+*.log
+pubspec.lock # optional for libs; keep/remove based on your policy
