@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/shell/home_shell.dart';
+import 'features/auth/auth_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
@@ -11,6 +12,7 @@ class SmartBillApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool enableAuthGate = const bool.fromEnvironment('ENABLE_AUTH', defaultValue: false);
     return MaterialApp(
       title: 'DELS SmartBill',
       theme: ThemeData(
@@ -27,7 +29,8 @@ class SmartBillApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const HomeShell(),
+      // ignore: dead_code
+      home: enableAuthGate ? const AuthGate(child: HomeShell()) : const HomeShell(),
     );
   }
 }
