@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/format/currency.dart';
+import '../../data/db/app_database.dart';
+import '../../data/db/entities/product_entity.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -12,13 +14,7 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   final TextEditingController _searchCtrl = TextEditingController();
 
-  final List<_ProductVM> _items = const [
-    _ProductVM(name: 'Laptop', category: 'Electronics', price: 1200.00),
-    _ProductVM(name: 'Notebook', category: 'Office Supplies', price: 5.00),
-    _ProductVM(name: 'Mouse', category: 'Electronics', price: 25.00),
-    _ProductVM(name: 'Pens', category: 'Office Supplies', price: 2.50),
-    _ProductVM(name: 'Keyboard', category: 'Electronics', price: 75.00),
-  ];
+  AppDatabase? _db;
 
   String _query = '';
 
@@ -27,77 +23,117 @@ class _ProductsPageState extends State<ProductsPage> {
     _searchCtrl.dispose();
     super.dispose();
   }
-
+  
   @override
   Widget build(BuildContext context) {
-    final filtered = _items
-        .where((e) => e.name.toLowerCase().contains(_query.toLowerCase()) ||
-            e.category.toLowerCase().contains(_query.toLowerCase()))
-        .toList();
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
-  final bg = isDark ? AppColors.primary : AppColors.backgroundLight;
+    final bg = isDark ? AppColors.primary : AppColors.backgroundLight;
 
-    return Scaffold(
-      backgroundColor: bg,
-      appBar: AppBar(
-        title: const Text('Products'),
-        centerTitle: true,
-    backgroundColor: (isDark
-        ? AppColors.primary
-        : AppColors.backgroundLight)
-      .withValues(alpha: 0.8),
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Stack(
-              children: [
-                TextField(
-                  controller: _searchCtrl,
-                  onChanged: (v) => setState(() => _query = v),
-                  decoration: InputDecoration(
-                    hintText: 'Search products',
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-          fillColor: isDark
-            ? AppColors.secondary.withValues(alpha: 0.2)
-            : Colors.white.withValues(alpha: 0.7),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-            color: isDark
-              ? AppColors.secondary.withValues(alpha: 0.3)
-              : const Color(0xFFE7E5E4),
-                      ),
+    return FutureBuilder<AppDatabase>(
+      future: _initDb(),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return Scaffold(
+            backgroundColor: bg,
+            appBar: AppBar(
+              title: const Text('Products'),
+              centerTitle: true,
+              backgroundColor: (isDark
+                      ? AppColors.primary
+                      : AppColors.backgroundLight)
+                  .withValues(alpha: 0.8),
+              surfaceTintColor: Colors.transparent,
+              elevation: 0,
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+        final db = snap.data!;
+        return StreamBuilder<List<ProductEntity>>(
+          stream: db.productDao.watchAll(),
+          builder: (context, s) {
+            final items = s.data ?? const [];
+            final filtered = items
+                .where((e) => e.name.toLowerCase().contains(_query.toLowerCase()) ||
+                    e.category.toLowerCase().contains(_query.toLowerCase()))
+                .toList();
+
+            return Scaffold(
+              backgroundColor: bg,
+              appBar: AppBar(
+                title: const Text('Products'),
+                centerTitle: true,
+                backgroundColor: (isDark
+                        ? AppColors.primary
+                        : AppColors.backgroundLight)
+                    .withValues(alpha: 0.8),
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+              ),
+              body: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Stack(
+                      children: [
+                        TextField(
+                          controller: _searchCtrl,
+                          onChanged: (v) => setState(() => _query = v),
+                          decoration: InputDecoration(
+                            hintText: 'Search products',
+                            prefixIcon: const Icon(Icons.search),
+                            filled: true,
+                            fillColor: isDark
+                                ? AppColors.secondary.withValues(alpha: 0.2)
+                                : Colors.white.withValues(alpha: 0.7),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: isDark
+                                    ? AppColors.secondary.withValues(alpha: 0.3)
+                                    : const Color(0xFFE7E5E4),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-              itemCount: filtered.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final p = filtered[index];
-                return _ProductTile(p: p);
-              },
-            ),
-          )
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.add, color: AppColors.primary, size: 28),
-      ),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final p = filtered[index];
+                        return _ProductTile(
+                          p: _ProductVM(
+                            name: p.name,
+                            category: p.category,
+                            price: p.price,
+                          ),
+                        );
+                      },
+                    ),
+                  )
+                ],
+              ),
+              floatingActionButton: FloatingActionButton(
+                onPressed: () {},
+                backgroundColor: AppColors.accent,
+                child: const Icon(Icons.add, color: AppColors.primary, size: 28),
+              ),
+            );
+          },
+        );
+      },
     );
+  }
+
+  Future<AppDatabase> _initDb() async {
+    if (_db != null) return _db!;
+    _db = await openAppDatabase();
+    return _db!;
   }
 }
 
