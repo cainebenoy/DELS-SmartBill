@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Product Inventory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#A7A8B2",
+            "secondary": "#5A5C6A",
+            "accent": "#1A1C22",
+            "background-light": "#f6f7f8", // Kept for potential light mode, though current theme is dark
+            "background-dark": "#1A1C22",
+          },
+          fontFamily: {
+            "display": ["Manrope"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-accent font-display text-primary">
+<div class="relative min-h-screen">
+<header class="sticky top-0 z-10 bg-accent/80 backdrop-blur-sm p-4">
+<h1 class="text-2xl font-bold text-center text-primary">Products</h1>
+<div class="mt-4 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary">search</span>
+<input class="w-full h-12 pl-10 pr-4 rounded-lg bg-secondary/20 text-primary placeholder:text-secondary border border-secondary/30 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Search products" type="text"/>
+</div>
+</header>
+<main class="px-4 pb-28 pt-2">
+<ul class="space-y-2">
+<li class="flex items-center p-3 bg-secondary/20 rounded-lg shadow-sm">
+<div class="flex-1">
+<p class="font-bold text-primary">Laptop</p>
+<p class="text-sm text-secondary">Electronics</p>
+</div>
+<p class="font-medium text-primary mr-4">$1200.00</p>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-secondary hover:text-primary">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-secondary hover:text-red-500">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</li>
+<li class="flex items-center p-3 bg-secondary/20 rounded-lg shadow-sm">
+<div class="flex-1">
+<p class="font-bold text-primary">Notebook</p>
+<p class="text-sm text-secondary">Office Supplies</p>
+</div>
+<p class="font-medium text-primary mr-4">$5.00</p>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-secondary hover:text-primary">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-secondary hover:text-red-500">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</li>
+<li class="flex items-center p-3 bg-secondary/20 rounded-lg shadow-sm">
+<div class="flex-1">
+<p class="font-bold text-primary">Mouse</p>
+<p class="text-sm text-secondary">Electronics</p>
+</div>
+<p class="font-medium text-primary mr-4">$25.00</p>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-secondary hover:text-primary">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-secondary hover:text-red-500">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</li>
+<li class="flex items-center p-3 bg-secondary/20 rounded-lg shadow-sm">
+<div class="flex-1">
+<p class="font-bold text-primary">Pens</p>
+<p class="text-sm text-secondary">Office Supplies</p>
+</div>
+<p class="font-medium text-primary mr-4">$2.50</p>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-secondary hover:text-primary">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-secondary hover:text-red-500">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</li>
+<li class="flex items-center p-3 bg-secondary/20 rounded-lg shadow-sm">
+<div class="flex-1">
+<p class="font-bold text-primary">Keyboard</p>
+<p class="text-sm text-secondary">Electronics</p>
+</div>
+<p class="font-medium text-primary mr-4">$75.00</p>
+<div class="flex items-center space-x-2">
+<button class="p-2 text-secondary hover:text-primary">
+<span class="material-symbols-outlined">edit</span>
+</button>
+<button class="p-2 text-secondary hover:text-red-500">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+</li>
+</ul>
+</main>
+<div class="fixed bottom-6 right-6">
+<button class="w-16 h-16 bg-primary text-accent rounded-full flex items-center justify-center shadow-lg hover:bg-primary/90 transition-transform duration-200 ease-in-out hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined" style="font-size: 32px;">add</span>
+</button>
+</div>
+</div>
+</body></html>

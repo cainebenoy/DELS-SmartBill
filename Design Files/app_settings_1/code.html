@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stitch Design</title>
+<link crossorigin="" href="https://fonts.gstatic.com/" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1A1C22',
+              secondary: '#5A5C6A',
+              accent: '#A7A8B2',
+              'background-light': '#FFFFFF',
+              'background-dark': '#1A1C22',
+              'content-light': '#1A1C22',
+              'content-dark': '#FFFFFF',
+              'subtle-light': '#5A5C6A',
+              'subtle-dark': '#A7A8B2',
+              'border-light': '#E5E7EB',
+              'border-dark': '#374151',
+              'danger': '#dc2626'
+            },
+            fontFamily: {
+              display: ['Manrope', 'sans-serif'],
+            },
+            borderRadius: {
+              DEFAULT: '0.25rem',
+              lg: '0.5rem',
+              xl: '0.75rem',
+              full: '9999px',
+            },
+          },
+        },
+      };
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="flex h-screen flex-col">
+<header class="flex items-center border-b border-border-light dark:border-border-dark p-4">
+<button class="text-content-light dark:text-content-dark">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
+</svg>
+</button>
+<h1 class="flex-1 text-center text-lg font-bold text-content-light dark:text-content-dark pr-6">Settings</h1>
+</header>
+<main class="flex-1 overflow-y-auto bg-gray-50 dark:bg-primary">
+<div class="divide-y divide-border-light dark:divide-border-dark">
+<div class="p-4">
+<h2 class="text-sm font-semibold text-subtle-light dark:text-subtle-dark mb-2 px-2">Appearance</h2>
+<div class="flex items-center justify-between rounded-lg bg-white dark:bg-secondary/20 p-4">
+<div class="flex items-center gap-4">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-content-light dark:text-content-dark">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M128,40a88,88,0,0,0-43.27,163.7,8,8,0,0,0,14.61-6.19A72.23,72.23,0,0,1,128,56,71.69,71.69,0,0,1,200,128a72,72,0,0,1-144,0,8,8,0,0,0-16,0,88,88,0,1,0,88-88Z"></path>
+</svg>
+</div>
+<span class="text-base text-content-light dark:text-content-dark">Dark Mode</span>
+</div>
+<label class="relative inline-flex cursor-pointer items-center">
+<input checked="" class="peer sr-only" type="checkbox" value=""/>
+<div class="peer h-6 w-11 rounded-full bg-border-light after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-accent/30 dark:peer-checked:bg-content-dark dark:peer-checked:after:bg-primary"></div>
+</label>
+</div>
+</div>
+<div class="p-4">
+<h2 class="text-sm font-semibold text-subtle-light dark:text-subtle-dark mb-2 px-2">Hardware</h2>
+<button class="flex w-full items-center justify-between rounded-lg bg-white dark:bg-secondary/20 p-4 text-left">
+<div class="flex items-center gap-4">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-content-light dark:text-content-dark">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M214.67,72H200V40a8,8,0,0,0-8-8H64a8,8,0,0,0-8,8V72H41.33C27.36,72,16,82.77,16,96v80a8,8,0,0,0,8,8H56v32a8,8,0,0,0,8,8H192a8,8,0,0,0,8-8V184h32a8,8,0,0,0,8-8V96C240,82.77,228.64,72,214.67,72ZM72,48H184V72H72ZM184,208H72V160H184Zm40-40H200V152a8,8,0,0,0-8-8H64a8,8,0,0,0-8,8v16H32V96c0-4.41,4.19-8,9.33-8H214.67c5.14,0,9.33,3.59,9.33,8Zm-24-52a12,12,0,1,1-12-12A12,12,0,0,1,200,116Z"></path>
+</svg>
+</div>
+<span class="text-base text-content-light dark:text-content-dark">Printer Setup</span>
+</div>
+<svg class="text-subtle-light dark:text-accent" fill="currentColor" height="20" viewBox="0 0 256 256" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M181.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L164.69,128,98.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,181.66,133.66Z"></path>
+</svg>
+</button>
+</div>
+<div class="p-4">
+<h2 class="text-sm font-semibold text-subtle-light dark:text-subtle-dark mb-2 px-2">Data</h2>
+<button class="flex w-full items-center justify-between rounded-lg bg-white dark:bg-secondary/20 p-4 text-left">
+<div class="flex items-center gap-4">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20 text-content-light dark:text-content-dark">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"></path>
+</svg>
+</div>
+<span class="text-base text-content-light dark:text-content-dark">Backup &amp; Restore</span>
+</div>
+<svg class="text-subtle-light dark:text-accent" fill="currentColor" height="20" viewBox="0 0 256 256" width="20" xmlns="http://www.w3.org/2000/svg">
+<path d="M181.66,133.66l-72,72a8,8,0,0,1-11.32-11.32L164.69,128,98.34,61.66a8,8,0,0,1,11.32-11.32l72,72A8,8,0,0,1,181.66,133.66Z"></path>
+</svg>
+</button>
+</div>
+<div class="p-4">
+<h2 class="text-sm font-semibold text-subtle-light dark:text-subtle-dark mb-2 px-2">Account</h2>
+<button class="flex w-full items-center justify-between rounded-lg bg-white dark:bg-secondary/20 p-4 text-left">
+<div class="flex items-center gap-4">
+<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-danger/10 text-danger">
+<svg fill="currentColor" height="24" viewBox="0 0 256 256" width="24" xmlns="http://www.w3.org/2000/svg">
+<path d="M128,24a104,104,0,1,0,104,104A104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm45.66-125.66a8,8,0,0,1-11.32,11.32L128,112.69l-34.34,34.33a8,8,0,0,1-11.32-11.32L116.69,101.37,82.34,67.03a8,8,0,0,1,11.32-11.32L128,89.37l34.34-34.34a8,8,0,0,1,11.32,11.32L139.31,101.37Z"></path>
+</svg>
+</div>
+<span class="text-base text-danger">Logout</span>
+</div>
+</button>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>

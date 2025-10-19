@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'features/products/products_page.dart';
 
 void main() {
   runApp(const SmartBillApp());
@@ -15,21 +16,9 @@ class SmartBillApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const _ScaffoldPlaceholder(),
+      home: const ProductsPage(),
     );
   }
 }
 
-class _ScaffoldPlaceholder extends StatelessWidget {
-  const _ScaffoldPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('DELS SmartBill')),
-      body: const Center(
-        child: Text('Project initialized. Next: dependencies and auth setup.'),
-      ),
-    );
-  }
-}
+// Placeholder removed; using ProductsPage as initial screen.
