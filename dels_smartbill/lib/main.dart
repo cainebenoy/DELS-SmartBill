@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'features/products/products_page.dart';
+import 'features/shell/home_shell.dart';
 
 void main() {
   runApp(const SmartBillApp());
@@ -16,7 +16,7 @@ class SmartBillApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const ProductsPage(),
+      home: const HomeShell(),
     );
   }
 }
