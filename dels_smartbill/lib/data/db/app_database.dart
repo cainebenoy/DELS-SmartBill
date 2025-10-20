@@ -63,55 +63,10 @@ final _migration1to2 = Migration(1, 2, (database) async {
   ''');
 });
 
+// Dummy data seeding disabled - using proper UUIDs now
+// Products are created through the UI with Uuid().v4()
 Future<void> _seedIfEmpty(AppDatabase db) async {
-  final count = await db.productDao.countAll() ?? 0;
-  if (count > 0) return;
-  final now = DateTime.now();
-  await db.productDao.insertAll([
-    ProductEntity(
-      id: 'p1',
-      name: 'Laptop',
-      category: 'Electronics',
-      price: 1200.00,
-      createdAt: now,
-      updatedAt: now,
-      deletedAtMillis: null,
-    ),
-    ProductEntity(
-      id: 'p2',
-      name: 'Notebook',
-      category: 'Office Supplies',
-      price: 5.00,
-      createdAt: now,
-      updatedAt: now,
-      deletedAtMillis: null,
-    ),
-    ProductEntity(
-      id: 'p3',
-      name: 'Mouse',
-      category: 'Electronics',
-      price: 25.00,
-      createdAt: now,
-      updatedAt: now,
-      deletedAtMillis: null,
-    ),
-    ProductEntity(
-      id: 'p4',
-      name: 'Pens',
-      category: 'Office Supplies',
-      price: 2.50,
-      createdAt: now,
-      updatedAt: now,
-      deletedAtMillis: null,
-    ),
-    ProductEntity(
-      id: 'p5',
-      name: 'Keyboard',
-      category: 'Electronics',
-      price: 75.00,
-      createdAt: now,
-      updatedAt: now,
-      deletedAtMillis: null,
-    ),
-  ]);
+  // No seeding - start with empty database
+  return;
 }
+
