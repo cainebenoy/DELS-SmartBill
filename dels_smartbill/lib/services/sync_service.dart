@@ -264,11 +264,264 @@ class SyncService {
   }
 
   Future<void> pull(AppDatabase db) async {
-  // TODO: Use SharedPreferences for lastSync in Supabase pull
-  // TODO: Use lastSync for Supabase pull
-    // TODO: Fetch changes from Supabase since lastSync
-    // TODO: Merge changes to local DB
-    // TODO: Update lastSync
+    try {
+      // Check if Supabase is initialized
+      SupabaseClient? supabase;
+      try {
+        supabase = Supabase.instance.client;
+      } catch (e) {
+        print('[SyncService] Supabase not initialized, skipping pull');
+        return;
+      }
+
+      print('[SyncService] Starting pull sync...');
+      
+      // Get last sync timestamp
+      final lastSync = await getLastSync();
+      print('[SyncService] Last sync was at: $lastSync (${DateTime.fromMillisecondsSinceEpoch(lastSync)})');
+      
+      // Fetch changes from Supabase
+      await _pullProducts(db, supabase, lastSync);
+      await _pullCustomers(db, supabase, lastSync);
+      await _pullInvoices(db, supabase, lastSync);
+      await _pullInvoiceItems(db, supabase, lastSync);
+      
+      // Update last sync timestamp
+      await updateLastSync(DateTime.now().millisecondsSinceEpoch);
+      print('[SyncService] Pull sync completed successfully');
+    } catch (e, stack) {
+      print('[SyncService] Pull sync failed: $e');
+      print('[SyncService] Stack trace: $stack');
+      rethrow;
+    }
+  }
+
+  Future<void> _pullProducts(AppDatabase db, SupabaseClient supabase, int lastSync) async {
+    try {
+      print('[SyncService] Pulling products since $lastSync...');
+      
+      // Call RPC function to fetch products since lastSync
+      final response = await supabase.rpc('fetch_products_since', 
+        params: {'since_timestamp': lastSync}
+      ) as List<dynamic>;
+      
+      print('[SyncService] Fetched ${response.length} products from Supabase');
+      
+      // Process each product
+      for (final item in response) {
+        try {
+          // Parse deletedAtMillis from deleted_at timestamp
+          int? deletedAtMillis;
+          if (item['deleted_at'] != null) {
+            deletedAtMillis = DateTime.parse(item['deleted_at'] as String).millisecondsSinceEpoch;
+          }
+          
+          final remoteProduct = ProductEntity(
+            id: item['id'] as String,
+            name: item['name'] as String,
+            price: (item['price'] as num).toDouble(),
+            category: item['category'] as String,
+            createdAt: DateTime.parse(item['created_at'] as String),
+            updatedAt: DateTime.parse(item['updated_at'] as String),
+            deletedAtMillis: deletedAtMillis,
+            isDirty: false, // Remote data is clean
+            isDeleted: deletedAtMillis != null,
+          );
+          
+          // Check if product exists locally by searching
+          final existing = await db.productDao.search('%${remoteProduct.id}%');
+          final localProduct = existing.isEmpty ? null : existing.first;
+          
+          if (localProduct == null) {
+            // New product, insert it
+            await db.productDao.insertOne(remoteProduct);
+            print('[SyncService] Inserted new product: ${remoteProduct.name}');
+          } else {
+            // Product exists, check for conflicts
+            if (remoteProduct.updatedAt.isAfter(localProduct.updatedAt)) {
+              // Remote is newer, update local
+              await db.productDao.updateOne(remoteProduct);
+              print('[SyncService] Updated product: ${remoteProduct.name} (remote newer)');
+            } else {
+              print('[SyncService] Skipped product: ${remoteProduct.name} (local newer)');
+            }
+          }
+        } catch (e) {
+          print('[SyncService] Failed to process product: $e');
+          // Continue with other products
+        }
+      }
+    } catch (e) {
+      print('[SyncService] Failed to pull products: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _pullCustomers(AppDatabase db, SupabaseClient supabase, int lastSync) async {
+    try {
+      print('[SyncService] Pulling customers since $lastSync...');
+      
+      final response = await supabase.rpc('fetch_customers_since', 
+        params: {'since_timestamp': lastSync}
+      ) as List<dynamic>;
+      
+      print('[SyncService] Fetched ${response.length} customers from Supabase');
+      
+      for (final item in response) {
+        try {
+          int? deletedAtMillis;
+          if (item['deleted_at'] != null) {
+            deletedAtMillis = DateTime.parse(item['deleted_at'] as String).millisecondsSinceEpoch;
+          }
+          
+          final remoteCustomer = CustomerEntity(
+            id: item['id'] as String,
+            name: item['name'] as String,
+            phone: item['phone'] as String? ?? '',
+            email: item['email'] as String? ?? '',
+            address: item['address'] as String? ?? '',
+            createdAt: DateTime.parse(item['created_at'] as String),
+            updatedAt: DateTime.parse(item['updated_at'] as String),
+            deletedAtMillis: deletedAtMillis,
+            isDirty: false,
+            isDeleted: deletedAtMillis != null,
+          );
+          
+          // Check if customer exists locally by searching
+          final existing = await db.customerDao.search('%${remoteCustomer.id}%');
+          final localCustomer = existing.isEmpty ? null : existing.first;
+          
+          if (localCustomer == null) {
+            await db.customerDao.insertOne(remoteCustomer);
+            print('[SyncService] Inserted new customer: ${remoteCustomer.name}');
+          } else {
+            if (remoteCustomer.updatedAt.isAfter(localCustomer.updatedAt)) {
+              await db.customerDao.updateOne(remoteCustomer);
+              print('[SyncService] Updated customer: ${remoteCustomer.name} (remote newer)');
+            } else {
+              print('[SyncService] Skipped customer: ${remoteCustomer.name} (local newer)');
+            }
+          }
+        } catch (e) {
+          print('[SyncService] Failed to process customer: $e');
+        }
+      }
+    } catch (e) {
+      print('[SyncService] Failed to pull customers: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _pullInvoices(AppDatabase db, SupabaseClient supabase, int lastSync) async {
+    try {
+      print('[SyncService] Pulling invoices since $lastSync...');
+      
+      final response = await supabase.rpc('fetch_invoices_since', 
+        params: {'since_timestamp': lastSync}
+      ) as List<dynamic>;
+      
+      print('[SyncService] Fetched ${response.length} invoices from Supabase');
+      
+      for (final item in response) {
+        try {
+          int? deletedAtMillis;
+          if (item['deleted_at'] != null) {
+            deletedAtMillis = DateTime.parse(item['deleted_at'] as String).millisecondsSinceEpoch;
+          }
+          
+          final remoteInvoice = InvoiceEntity(
+            id: item['id'] as String,
+            customerId: item['customer_id'] as String,
+            invoiceNumber: item['invoice_number'] as String,
+            totalAmount: (item['total_amount'] as num).toDouble(),
+            createdByUserId: item['created_by_user_id'] as String? ?? 'unknown',
+            createdAt: DateTime.parse(item['created_at'] as String),
+            updatedAt: DateTime.parse(item['updated_at'] as String),
+            deletedAtMillis: deletedAtMillis,
+            isDirty: false,
+            isDeleted: deletedAtMillis != null,
+          );
+          
+          // Check if invoice exists locally by searching
+          final existing = await db.invoiceDao.search('%${remoteInvoice.id}%');
+          final localInvoice = existing.isEmpty ? null : existing.first;
+          
+          if (localInvoice == null) {
+            await db.invoiceDao.insertOne(remoteInvoice);
+            print('[SyncService] Inserted new invoice: ${remoteInvoice.invoiceNumber}');
+          } else {
+            if (remoteInvoice.updatedAt.isAfter(localInvoice.updatedAt)) {
+              await db.invoiceDao.updateOne(remoteInvoice);
+              print('[SyncService] Updated invoice: ${remoteInvoice.invoiceNumber} (remote newer)');
+            } else {
+              print('[SyncService] Skipped invoice: ${remoteInvoice.invoiceNumber} (local newer)');
+            }
+          }
+        } catch (e) {
+          print('[SyncService] Failed to process invoice: $e');
+        }
+      }
+    } catch (e) {
+      print('[SyncService] Failed to pull invoices: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> _pullInvoiceItems(AppDatabase db, SupabaseClient supabase, int lastSync) async {
+    try {
+      print('[SyncService] Pulling invoice items since $lastSync...');
+      
+      final response = await supabase.rpc('fetch_invoice_items_since', 
+        params: {'since_timestamp': lastSync}
+      ) as List<dynamic>;
+      
+      print('[SyncService] Fetched ${response.length} invoice items from Supabase');
+      
+      for (final item in response) {
+        try {
+          int? deletedAtMillis;
+          if (item['deleted_at'] != null) {
+            deletedAtMillis = DateTime.parse(item['deleted_at'] as String).millisecondsSinceEpoch;
+          }
+          
+          final remoteItem = InvoiceItemEntity(
+            id: item['id'] as String,
+            invoiceId: item['invoice_id'] as String,
+            productId: item['product_id'] as String,
+            quantity: item['quantity'] as int,
+            unitPrice: (item['unit_price'] as num).toDouble(),
+            createdAt: DateTime.parse(item['created_at'] as String),
+            updatedAt: DateTime.parse(item['updated_at'] as String),
+            deletedAtMillis: deletedAtMillis,
+            isDirty: false,
+            isDeleted: deletedAtMillis != null,
+          );
+          
+          // Check if invoice item exists locally by searching
+          final existing = await db.invoiceItemDao.byInvoice(remoteItem.invoiceId);
+          final localItem = existing.where((i) => i.id == remoteItem.id).isEmpty 
+            ? null 
+            : existing.firstWhere((i) => i.id == remoteItem.id);
+          
+          if (localItem == null) {
+            await db.invoiceItemDao.insertOne(remoteItem);
+            print('[SyncService] Inserted new invoice item: ${remoteItem.id}');
+          } else {
+            if (remoteItem.updatedAt.isAfter(localItem.updatedAt)) {
+              await db.invoiceItemDao.updateOne(remoteItem);
+              print('[SyncService] Updated invoice item: ${remoteItem.id} (remote newer)');
+            } else {
+              print('[SyncService] Skipped invoice item: ${remoteItem.id} (local newer)');
+            }
+          }
+        } catch (e) {
+          print('[SyncService] Failed to process invoice item: $e');
+        }
+      }
+    } catch (e) {
+      print('[SyncService] Failed to pull invoice items: $e');
+      rethrow;
+    }
   }
 
   Future<void> updateLastSync(int millis) async {

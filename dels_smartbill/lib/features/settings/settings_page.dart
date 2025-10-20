@@ -22,9 +22,21 @@ class _SettingsPageState extends State<SettingsPage> {
     });
     try {
       final db = await openAppDatabase();
-      await SyncService().push(db);
+      
+      // Push local changes to Supabase
       setState(() {
-        syncStatus = 'Sync successful';
+        syncStatus = 'Pushing local changes...';
+      });
+      await SyncService().push(db);
+      
+      // Pull remote changes from Supabase
+      setState(() {
+        syncStatus = 'Pulling remote changes...';
+      });
+      await SyncService().pull(db);
+      
+      setState(() {
+        syncStatus = 'Sync successful! ✓';
       });
     } catch (e) {
       setState(() {
