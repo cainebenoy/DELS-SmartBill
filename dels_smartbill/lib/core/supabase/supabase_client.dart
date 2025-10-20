@@ -16,5 +16,21 @@ class SupabaseInit {
       debug: false,
     );
     _initialized = true;
+    
+    // Auto sign-in for development/testing to bypass RLS
+    // TODO: Replace with proper Google OAuth in production
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session == null) {
+        print('[SupabaseInit] No session found, signing in anonymously for testing...');
+        await Supabase.instance.client.auth.signInAnonymously();
+        print('[SupabaseInit] Anonymous sign-in successful');
+      } else {
+        print('[SupabaseInit] Existing session found');
+      }
+    } catch (e) {
+      print('[SupabaseInit] Auto sign-in failed: $e');
+      // Continue anyway - app will work offline
+    }
   }
 }
