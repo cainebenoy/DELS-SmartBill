@@ -328,9 +328,8 @@ class SyncService {
             isDeleted: deletedAtMillis != null,
           );
           
-          // Check if product exists locally by searching
-          final existing = await db.productDao.search('%${remoteProduct.id}%');
-          final localProduct = existing.isEmpty ? null : existing.first;
+          // Check if product exists locally by ID
+          final localProduct = await db.productDao.findById(remoteProduct.id);
           
           if (localProduct == null) {
             // New product, insert it
@@ -387,9 +386,8 @@ class SyncService {
             isDeleted: deletedAtMillis != null,
           );
           
-          // Check if customer exists locally by searching
-          final existing = await db.customerDao.search('%${remoteCustomer.id}%');
-          final localCustomer = existing.isEmpty ? null : existing.first;
+          // Check if customer exists locally by ID
+          final localCustomer = await db.customerDao.findById(remoteCustomer.id);
           
           if (localCustomer == null) {
             await db.customerDao.insertOne(remoteCustomer);
@@ -442,9 +440,8 @@ class SyncService {
             isDeleted: deletedAtMillis != null,
           );
           
-          // Check if invoice exists locally by searching
-          final existing = await db.invoiceDao.search('%${remoteInvoice.id}%');
-          final localInvoice = existing.isEmpty ? null : existing.first;
+          // Check if invoice exists locally by ID
+          final localInvoice = await db.invoiceDao.findById(remoteInvoice.id);
           
           if (localInvoice == null) {
             await db.invoiceDao.insertOne(remoteInvoice);
@@ -497,11 +494,8 @@ class SyncService {
             isDeleted: deletedAtMillis != null,
           );
           
-          // Check if invoice item exists locally by searching
-          final existing = await db.invoiceItemDao.byInvoice(remoteItem.invoiceId);
-          final localItem = existing.where((i) => i.id == remoteItem.id).isEmpty 
-            ? null 
-            : existing.firstWhere((i) => i.id == remoteItem.id);
+          // Check if invoice item exists locally by ID
+          final localItem = await db.invoiceItemDao.findById(remoteItem.id);
           
           if (localItem == null) {
             await db.invoiceItemDao.insertOne(remoteItem);

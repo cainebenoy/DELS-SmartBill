@@ -9,6 +9,9 @@ abstract class InvoiceDao {
   @Query('SELECT * FROM InvoiceEntity WHERE isDeleted = 0 AND (invoiceNumber LIKE :q) ORDER BY createdAt DESC')
   Future<List<InvoiceEntity>> search(String q);
 
+  @Query('SELECT * FROM InvoiceEntity WHERE id = :id LIMIT 1')
+  Future<InvoiceEntity?> findById(String id);
+
   @Query('SELECT * FROM InvoiceEntity WHERE isDirty = 1')
   Future<List<InvoiceEntity>> findDirty();
 
@@ -38,6 +41,9 @@ abstract class InvoiceItemDao {
 
   @Query('SELECT * FROM InvoiceItemEntity WHERE isDeleted = 0 ORDER BY createdAt ASC')
   Future<List<InvoiceItemEntity>> getAll();
+
+  @Query('SELECT * FROM InvoiceItemEntity WHERE id = :id LIMIT 1')
+  Future<InvoiceItemEntity?> findById(String id);
 
   @Query('SELECT * FROM InvoiceItemEntity WHERE isDirty = 1')
   Future<List<InvoiceItemEntity>> findDirty();

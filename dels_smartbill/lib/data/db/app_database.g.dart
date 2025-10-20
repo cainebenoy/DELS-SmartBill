@@ -212,6 +212,23 @@ class _$ProductDao extends ProductDao {
   }
 
   @override
+  Future<ProductEntity?> findById(String id) async {
+    return _queryAdapter.query(
+        'SELECT * FROM ProductEntity WHERE id = ?1 LIMIT 1',
+        mapper: (Map<String, Object?> row) => ProductEntity(
+            id: row['id'] as String,
+            name: row['name'] as String,
+            category: row['category'] as String,
+            price: row['price'] as double,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            updatedAt: _dateTimeConverter.decode(row['updatedAt'] as int),
+            deletedAtMillis: row['deletedAtMillis'] as int?,
+            isDirty: (row['isDirty'] as int) != 0,
+            isDeleted: (row['isDeleted'] as int) != 0),
+        arguments: [id]);
+  }
+
+  @override
   Future<List<ProductEntity>> findDirty() async {
     return _queryAdapter.queryList(
         'SELECT * FROM ProductEntity WHERE isDirty = 1',
@@ -334,6 +351,24 @@ class _$CustomerDao extends CustomerDao {
         'SELECT * FROM CustomerEntity WHERE isDeleted = 0 AND (name LIKE ?1 OR phone LIKE ?1 OR email LIKE ?1) ORDER BY name ASC',
         mapper: (Map<String, Object?> row) => CustomerEntity(id: row['id'] as String, name: row['name'] as String, phone: row['phone'] as String, email: row['email'] as String, address: row['address'] as String, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), updatedAt: _dateTimeConverter.decode(row['updatedAt'] as int), deletedAtMillis: row['deletedAtMillis'] as int?, isDirty: (row['isDirty'] as int) != 0, isDeleted: (row['isDeleted'] as int) != 0),
         arguments: [q]);
+  }
+
+  @override
+  Future<CustomerEntity?> findById(String id) async {
+    return _queryAdapter.query(
+        'SELECT * FROM CustomerEntity WHERE id = ?1 LIMIT 1',
+        mapper: (Map<String, Object?> row) => CustomerEntity(
+            id: row['id'] as String,
+            name: row['name'] as String,
+            phone: row['phone'] as String,
+            email: row['email'] as String,
+            address: row['address'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            updatedAt: _dateTimeConverter.decode(row['updatedAt'] as int),
+            deletedAtMillis: row['deletedAtMillis'] as int?,
+            isDirty: (row['isDirty'] as int) != 0,
+            isDeleted: (row['isDeleted'] as int) != 0),
+        arguments: [id]);
   }
 
   @override
@@ -461,6 +496,24 @@ class _$InvoiceDao extends InvoiceDao {
         'SELECT * FROM InvoiceEntity WHERE isDeleted = 0 AND (invoiceNumber LIKE ?1) ORDER BY createdAt DESC',
         mapper: (Map<String, Object?> row) => InvoiceEntity(id: row['id'] as String, invoiceNumber: row['invoiceNumber'] as String, customerId: row['customerId'] as String, totalAmount: row['totalAmount'] as double, createdByUserId: row['createdByUserId'] as String, createdAt: _dateTimeConverter.decode(row['createdAt'] as int), updatedAt: _dateTimeConverter.decode(row['updatedAt'] as int), deletedAtMillis: row['deletedAtMillis'] as int?, isDirty: (row['isDirty'] as int) != 0, isDeleted: (row['isDeleted'] as int) != 0),
         arguments: [q]);
+  }
+
+  @override
+  Future<InvoiceEntity?> findById(String id) async {
+    return _queryAdapter.query(
+        'SELECT * FROM InvoiceEntity WHERE id = ?1 LIMIT 1',
+        mapper: (Map<String, Object?> row) => InvoiceEntity(
+            id: row['id'] as String,
+            invoiceNumber: row['invoiceNumber'] as String,
+            customerId: row['customerId'] as String,
+            totalAmount: row['totalAmount'] as double,
+            createdByUserId: row['createdByUserId'] as String,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            updatedAt: _dateTimeConverter.decode(row['updatedAt'] as int),
+            deletedAtMillis: row['deletedAtMillis'] as int?,
+            isDirty: (row['isDirty'] as int) != 0,
+            isDeleted: (row['isDeleted'] as int) != 0),
+        arguments: [id]);
   }
 
   @override
@@ -605,6 +658,24 @@ class _$InvoiceItemDao extends InvoiceItemDao {
             deletedAtMillis: row['deletedAtMillis'] as int?,
             isDirty: (row['isDirty'] as int) != 0,
             isDeleted: (row['isDeleted'] as int) != 0));
+  }
+
+  @override
+  Future<InvoiceItemEntity?> findById(String id) async {
+    return _queryAdapter.query(
+        'SELECT * FROM InvoiceItemEntity WHERE id = ?1 LIMIT 1',
+        mapper: (Map<String, Object?> row) => InvoiceItemEntity(
+            id: row['id'] as String,
+            invoiceId: row['invoiceId'] as String,
+            productId: row['productId'] as String,
+            quantity: row['quantity'] as int,
+            unitPrice: row['unitPrice'] as double,
+            createdAt: _dateTimeConverter.decode(row['createdAt'] as int),
+            updatedAt: _dateTimeConverter.decode(row['updatedAt'] as int),
+            deletedAtMillis: row['deletedAtMillis'] as int?,
+            isDirty: (row['isDirty'] as int) != 0,
+            isDeleted: (row['isDeleted'] as int) != 0),
+        arguments: [id]);
   }
 
   @override
