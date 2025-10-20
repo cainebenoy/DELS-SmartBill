@@ -1,11 +1,13 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:logger/logger.dart';
 import '../data/db/app_database.dart';
 import '../data/db/entities/product_entity.dart';
 import '../data/db/entities/customer_entity.dart';
 import '../data/db/entities/invoice_entity.dart';
 
 class SyncService {
+  final Logger _logger = Logger();
   static const _lastSyncKey = 'last_sync_at';
 
   /// Push dirty (locally modified) records to Supabase
@@ -16,11 +18,11 @@ class SyncService {
       try {
         supabase = Supabase.instance.client;
       } catch (e) {
-        print('[SyncService] Supabase not initialized, skipping push');
+        _logger.w('[SyncService] Supabase not initialized, skipping push');
         return;
       }
 
-      print('[SyncService] Starting push sync...');
+      _logger.i('[SyncService] Starting push sync...');
 
       // 1. Push Products
       await _pushProducts(db, supabase);
@@ -34,10 +36,10 @@ class SyncService {
       // 4. Push Invoice Items
       await _pushInvoiceItems(db, supabase);
 
-      print('[SyncService] Push sync completed successfully');
+  _logger.i('[SyncService] Push sync completed successfully');
     } catch (e, stackTrace) {
-      print('[SyncService] Push sync failed: $e');
-      print('[SyncService] Stack trace: $stackTrace');
+      _logger.e('[SyncService] Push sync failed: $e');
+      _logger.e('[SyncService] Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -45,11 +47,11 @@ class SyncService {
   Future<void> _pushProducts(AppDatabase db, SupabaseClient supabase) async {
     final dirtyProducts = await db.productDao.findDirty();
     if (dirtyProducts.isEmpty) {
-      print('[SyncService] No dirty products to push');
+      _logger.i('[SyncService] No dirty products to push');
       return;
     }
 
-    print('[SyncService] Pushing ${dirtyProducts.length} products...');
+    _logger.i('[SyncService] Pushing ${dirtyProducts.length} products...');
 
     for (final product in dirtyProducts) {
       try {
@@ -61,7 +63,7 @@ class SyncService {
                 : DateTime.now().toIso8601String(),
             'updated_at': product.updatedAt.toIso8601String(),
           }).eq('id', product.id);
-          print('[SyncService] Soft deleted product: ${product.name} (set deleted_at timestamp)');
+          _logger.i('[SyncService] Soft deleted product: ${product.name} (set deleted_at timestamp)');
         } else {
           // Upsert product to Supabase
           await supabase.from('products').upsert({
@@ -73,7 +75,7 @@ class SyncService {
             'updated_at': product.updatedAt.toIso8601String(),
             'deleted_at': null,
           });
-          print('[SyncService] Pushed product: ${product.name}');
+          _logger.i('[SyncService] Pushed product: ${product.name}');
         }
 
         // Clear isDirty flag
@@ -89,9 +91,9 @@ class SyncService {
           isDeleted: product.isDeleted,
         ));
 
-        print('[SyncService] Pushed product: ${product.name}');
+  _logger.i('[SyncService] Pushed product: ${product.name}');
       } catch (e) {
-        print('[SyncService] Failed to push product ${product.name}: $e');
+        _logger.e('[SyncService] Failed to push product ${product.name}: $e');
         // Continue with other products
       }
     }
@@ -100,11 +102,11 @@ class SyncService {
   Future<void> _pushCustomers(AppDatabase db, SupabaseClient supabase) async {
     final dirtyCustomers = await db.customerDao.findDirty();
     if (dirtyCustomers.isEmpty) {
-      print('[SyncService] No dirty customers to push');
+      _logger.i('[SyncService] No dirty customers to push');
       return;
     }
 
-    print('[SyncService] Pushing ${dirtyCustomers.length} customers...');
+    _logger.i('[SyncService] Pushing ${dirtyCustomers.length} customers...');
 
     for (final customer in dirtyCustomers) {
       try {
@@ -141,9 +143,9 @@ class SyncService {
           isDeleted: customer.isDeleted,
         ));
 
-        print('[SyncService] Pushed customer: ${customer.name}');
+  _logger.i('[SyncService] Pushed customer: ${customer.name}');
       } catch (e) {
-        print('[SyncService] Failed to push customer ${customer.name}: $e');
+        _logger.e('[SyncService] Failed to push customer ${customer.name}: $e');
         // Continue with other customers
       }
     }
@@ -152,11 +154,11 @@ class SyncService {
   Future<void> _pushInvoices(AppDatabase db, SupabaseClient supabase) async {
     final dirtyInvoices = await db.invoiceDao.findDirty();
     if (dirtyInvoices.isEmpty) {
-      print('[SyncService] No dirty invoices to push');
+      _logger.i('[SyncService] No dirty invoices to push');
       return;
     }
 
-    print('[SyncService] Pushing ${dirtyInvoices.length} invoices...');
+    _logger.i('[SyncService] Pushing ${dirtyInvoices.length} invoices...');
 
     for (final invoice in dirtyInvoices) {
       try {
@@ -184,7 +186,7 @@ class SyncService {
           // Update local invoice with server-generated invoice_number if changed
           final serverInvoiceNumber = response['invoice_number'] as String?;
           if (serverInvoiceNumber != null && serverInvoiceNumber != invoice.invoiceNumber) {
-            print('[SyncService] Invoice number updated: ${invoice.invoiceNumber} -> $serverInvoiceNumber');
+            _logger.i('[SyncService] Invoice number updated: ${invoice.invoiceNumber} -> $serverInvoiceNumber');
           }
         }
 
@@ -202,9 +204,9 @@ class SyncService {
           isDeleted: invoice.isDeleted,
         ));
 
-        print('[SyncService] Pushed invoice: ${invoice.invoiceNumber}');
+  _logger.i('[SyncService] Pushed invoice: ${invoice.invoiceNumber}');
       } catch (e) {
-        print('[SyncService] Failed to push invoice ${invoice.invoiceNumber}: $e');
+        _logger.e('[SyncService] Failed to push invoice ${invoice.invoiceNumber}: $e');
         // Continue with other invoices
       }
     }
@@ -213,11 +215,11 @@ class SyncService {
   Future<void> _pushInvoiceItems(AppDatabase db, SupabaseClient supabase) async {
     final dirtyItems = await db.invoiceItemDao.findDirty();
     if (dirtyItems.isEmpty) {
-      print('[SyncService] No dirty invoice items to push');
+      _logger.i('[SyncService] No dirty invoice items to push');
       return;
     }
 
-    print('[SyncService] Pushing ${dirtyItems.length} invoice items...');
+    _logger.i('[SyncService] Pushing ${dirtyItems.length} invoice items...');
 
     for (final item in dirtyItems) {
       try {
@@ -257,9 +259,9 @@ class SyncService {
           isDeleted: item.isDeleted,
         ));
 
-        print('[SyncService] Pushed invoice item: ${item.id}');
+  _logger.i('[SyncService] Pushed invoice item: ${item.id}');
       } catch (e) {
-        print('[SyncService] Failed to push invoice item ${item.id}: $e');
+        _logger.e('[SyncService] Failed to push invoice item ${item.id}: $e');
         // Continue with other items
       }
     }
@@ -272,15 +274,15 @@ class SyncService {
       try {
         supabase = Supabase.instance.client;
       } catch (e) {
-        print('[SyncService] Supabase not initialized, skipping pull');
+        _logger.w('[SyncService] Supabase not initialized, skipping pull');
         return;
       }
 
-      print('[SyncService] Starting pull sync...');
+      _logger.i('[SyncService] Starting pull sync...');
       
       // Get last sync timestamp
       final lastSync = await getLastSync();
-      print('[SyncService] Last sync was at: $lastSync (${DateTime.fromMillisecondsSinceEpoch(lastSync)})');
+  _logger.i('[SyncService] Last sync was at: $lastSync (${DateTime.fromMillisecondsSinceEpoch(lastSync)})');
       
       // Fetch changes from Supabase
       await _pullProducts(db, supabase, lastSync);
@@ -290,24 +292,24 @@ class SyncService {
       
       // Update last sync timestamp
       await updateLastSync(DateTime.now().millisecondsSinceEpoch);
-      print('[SyncService] Pull sync completed successfully');
+  _logger.i('[SyncService] Pull sync completed successfully');
     } catch (e, stack) {
-      print('[SyncService] Pull sync failed: $e');
-      print('[SyncService] Stack trace: $stack');
+      _logger.e('[SyncService] Pull sync failed: $e');
+      _logger.e('[SyncService] Stack trace: $stack');
       rethrow;
     }
   }
 
   Future<void> _pullProducts(AppDatabase db, SupabaseClient supabase, int lastSync) async {
     try {
-      print('[SyncService] Pulling products since $lastSync...');
+      _logger.i('[SyncService] Pulling products since $lastSync...');
       
       // Call RPC function to fetch products since lastSync
       final response = await supabase.rpc('fetch_products_since', 
         params: {'since_timestamp': lastSync}
       ) as List<dynamic>;
       
-      print('[SyncService] Fetched ${response.length} products from Supabase');
+  _logger.i('[SyncService] Fetched ${response.length} products from Supabase');
       
       // Process each product
       for (final item in response) {
@@ -336,37 +338,37 @@ class SyncService {
           if (localProduct == null) {
             // New product, insert it
             await db.productDao.insertOne(remoteProduct);
-            print('[SyncService] Inserted new product: ${remoteProduct.name}');
+            _logger.i('[SyncService] Inserted new product: ${remoteProduct.name}');
           } else {
             // Product exists, check for conflicts
             if (remoteProduct.updatedAt.isAfter(localProduct.updatedAt)) {
               // Remote is newer, update local
               await db.productDao.updateOne(remoteProduct);
-              print('[SyncService] Updated product: ${remoteProduct.name} (remote newer)');
+              _logger.i('[SyncService] Updated product: ${remoteProduct.name} (remote newer)');
             } else {
-              print('[SyncService] Skipped product: ${remoteProduct.name} (local newer)');
+              _logger.i('[SyncService] Skipped product: ${remoteProduct.name} (local newer)');
             }
           }
         } catch (e) {
-          print('[SyncService] Failed to process product: $e');
+          _logger.e('[SyncService] Failed to process product: $e');
           // Continue with other products
         }
       }
     } catch (e) {
-      print('[SyncService] Failed to pull products: $e');
+      _logger.e('[SyncService] Failed to pull products: $e');
       rethrow;
     }
   }
 
   Future<void> _pullCustomers(AppDatabase db, SupabaseClient supabase, int lastSync) async {
     try {
-      print('[SyncService] Pulling customers since $lastSync...');
+      _logger.i('[SyncService] Pulling customers since $lastSync...');
       
       final response = await supabase.rpc('fetch_customers_since', 
         params: {'since_timestamp': lastSync}
       ) as List<dynamic>;
       
-      print('[SyncService] Fetched ${response.length} customers from Supabase');
+  _logger.i('[SyncService] Fetched ${response.length} customers from Supabase');
       
       for (final item in response) {
         try {
@@ -393,34 +395,34 @@ class SyncService {
           
           if (localCustomer == null) {
             await db.customerDao.insertOne(remoteCustomer);
-            print('[SyncService] Inserted new customer: ${remoteCustomer.name}');
+            _logger.i('[SyncService] Inserted new customer: ${remoteCustomer.name}');
           } else {
             if (remoteCustomer.updatedAt.isAfter(localCustomer.updatedAt)) {
               await db.customerDao.updateOne(remoteCustomer);
-              print('[SyncService] Updated customer: ${remoteCustomer.name} (remote newer)');
+              _logger.i('[SyncService] Updated customer: ${remoteCustomer.name} (remote newer)');
             } else {
-              print('[SyncService] Skipped customer: ${remoteCustomer.name} (local newer)');
+              _logger.i('[SyncService] Skipped customer: ${remoteCustomer.name} (local newer)');
             }
           }
         } catch (e) {
-          print('[SyncService] Failed to process customer: $e');
+          _logger.e('[SyncService] Failed to process customer: $e');
         }
       }
     } catch (e) {
-      print('[SyncService] Failed to pull customers: $e');
+      _logger.e('[SyncService] Failed to pull customers: $e');
       rethrow;
     }
   }
 
   Future<void> _pullInvoices(AppDatabase db, SupabaseClient supabase, int lastSync) async {
     try {
-      print('[SyncService] Pulling invoices since $lastSync...');
+      _logger.i('[SyncService] Pulling invoices since $lastSync...');
       
       final response = await supabase.rpc('fetch_invoices_since', 
         params: {'since_timestamp': lastSync}
       ) as List<dynamic>;
       
-      print('[SyncService] Fetched ${response.length} invoices from Supabase');
+  _logger.i('[SyncService] Fetched ${response.length} invoices from Supabase');
       
       for (final item in response) {
         try {
@@ -447,34 +449,34 @@ class SyncService {
           
           if (localInvoice == null) {
             await db.invoiceDao.insertOne(remoteInvoice);
-            print('[SyncService] Inserted new invoice: ${remoteInvoice.invoiceNumber}');
+            _logger.i('[SyncService] Inserted new invoice: ${remoteInvoice.invoiceNumber}');
           } else {
             if (remoteInvoice.updatedAt.isAfter(localInvoice.updatedAt)) {
               await db.invoiceDao.updateOne(remoteInvoice);
-              print('[SyncService] Updated invoice: ${remoteInvoice.invoiceNumber} (remote newer)');
+              _logger.i('[SyncService] Updated invoice: ${remoteInvoice.invoiceNumber} (remote newer)');
             } else {
-              print('[SyncService] Skipped invoice: ${remoteInvoice.invoiceNumber} (local newer)');
+              _logger.i('[SyncService] Skipped invoice: ${remoteInvoice.invoiceNumber} (local newer)');
             }
           }
         } catch (e) {
-          print('[SyncService] Failed to process invoice: $e');
+          _logger.e('[SyncService] Failed to process invoice: $e');
         }
       }
     } catch (e) {
-      print('[SyncService] Failed to pull invoices: $e');
+      _logger.e('[SyncService] Failed to pull invoices: $e');
       rethrow;
     }
   }
 
   Future<void> _pullInvoiceItems(AppDatabase db, SupabaseClient supabase, int lastSync) async {
     try {
-      print('[SyncService] Pulling invoice items since $lastSync...');
+      _logger.i('[SyncService] Pulling invoice items since $lastSync...');
       
       final response = await supabase.rpc('fetch_invoice_items_since', 
         params: {'since_timestamp': lastSync}
       ) as List<dynamic>;
       
-      print('[SyncService] Fetched ${response.length} invoice items from Supabase');
+  _logger.i('[SyncService] Fetched ${response.length} invoice items from Supabase');
       
       for (final item in response) {
         try {
@@ -501,21 +503,21 @@ class SyncService {
           
           if (localItem == null) {
             await db.invoiceItemDao.insertOne(remoteItem);
-            print('[SyncService] Inserted new invoice item: ${remoteItem.id}');
+            _logger.i('[SyncService] Inserted new invoice item: ${remoteItem.id}');
           } else {
             if (remoteItem.updatedAt.isAfter(localItem.updatedAt)) {
               await db.invoiceItemDao.updateOne(remoteItem);
-              print('[SyncService] Updated invoice item: ${remoteItem.id} (remote newer)');
+              _logger.i('[SyncService] Updated invoice item: ${remoteItem.id} (remote newer)');
             } else {
-              print('[SyncService] Skipped invoice item: ${remoteItem.id} (local newer)');
+              _logger.i('[SyncService] Skipped invoice item: ${remoteItem.id} (local newer)');
             }
           }
         } catch (e) {
-          print('[SyncService] Failed to process invoice item: $e');
+          _logger.e('[SyncService] Failed to process invoice item: $e');
         }
       }
     } catch (e) {
-      print('[SyncService] Failed to pull invoice items: $e');
+      _logger.e('[SyncService] Failed to pull invoice items: $e');
       rethrow;
     }
   }

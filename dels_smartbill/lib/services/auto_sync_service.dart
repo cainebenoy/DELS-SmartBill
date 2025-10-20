@@ -1,9 +1,11 @@
 import 'dart:async';
 import '../data/db/app_database.dart';
 import 'sync_service.dart';
+import 'package:logger/logger.dart';
 
 /// Handles automatic syncing with debouncing to avoid excessive sync operations
 class AutoSyncService {
+  final Logger _logger = Logger();
   static final AutoSyncService _instance = AutoSyncService._internal();
   factory AutoSyncService() => _instance;
   AutoSyncService._internal();
@@ -38,25 +40,25 @@ class AutoSyncService {
   /// Internal method that performs the actual sync
   Future<void> _performSync() async {
     if (_isSyncing) {
-      print('[AutoSync] Sync already in progress, skipping...');
+      _logger.w('[AutoSync] Sync already in progress, skipping...');
       return;
     }
 
     try {
       _isSyncing = true;
-      print('[AutoSync] Starting automatic sync...');
-      
+      _logger.i('[AutoSync] Starting automatic sync...');
+
       final db = await openAppDatabase();
-      
+
       // Push local changes first
       await _syncService.push(db);
-      
+
       // Then pull remote changes
       await _syncService.pull(db);
-      
-      print('[AutoSync] Automatic sync completed');
+
+      _logger.i('[AutoSync] Automatic sync completed');
     } catch (e) {
-      print('[AutoSync] Sync failed: $e');
+      _logger.e('[AutoSync] Sync failed: $e');
       // Don't rethrow - we don't want to crash the app on sync failures
     } finally {
       _isSyncing = false;

@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 import 'core/supabase/supabase_client.dart';
 import 'services/auto_sync_service.dart';
+import 'package:logger/logger.dart';
 
 Future<void> main() async {
   // Initialize sqflite for desktop platforms
@@ -28,6 +29,7 @@ class SmartBillApp extends StatefulWidget {
 }
 
 class _SmartBillAppState extends State<SmartBillApp> with WidgetsBindingObserver {
+  final Logger _logger = Logger();
   @override
   void initState() {
     super.initState();
@@ -48,7 +50,7 @@ class _SmartBillAppState extends State<SmartBillApp> with WidgetsBindingObserver
     
     // Sync when app resumes from background
     if (state == AppLifecycleState.resumed) {
-      print('[App] App resumed, triggering sync...');
+      _logger.i('[App] App resumed, triggering sync...');
       AutoSyncService().syncNow();
     }
   }

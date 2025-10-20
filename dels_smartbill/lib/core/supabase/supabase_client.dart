@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../app_env.dart';
+import 'package:logger/logger.dart';
 
 class SupabaseInit {
+  static final Logger _logger = Logger();
   static bool _initialized = false;
 
   static Future<void> ensureInitialized() async {
@@ -22,14 +24,14 @@ class SupabaseInit {
     try {
       final session = Supabase.instance.client.auth.currentSession;
       if (session == null) {
-        print('[SupabaseInit] No session found, signing in anonymously for testing...');
+        _logger.i('[SupabaseInit] No session found, signing in anonymously for testing...');
         await Supabase.instance.client.auth.signInAnonymously();
-        print('[SupabaseInit] Anonymous sign-in successful');
+        _logger.i('[SupabaseInit] Anonymous sign-in successful');
       } else {
-        print('[SupabaseInit] Existing session found');
+        _logger.i('[SupabaseInit] Existing session found');
       }
     } catch (e) {
-      print('[SupabaseInit] Auto sign-in failed: $e');
+      _logger.e('[SupabaseInit] Auto sign-in failed: $e');
       // Continue anyway - app will work offline
     }
   }
