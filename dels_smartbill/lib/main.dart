@@ -2,8 +2,17 @@ import 'package:flutter/material.dart';
 import 'features/shell/home_shell.dart';
 import 'features/auth/auth_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'dart:io';
 
 void main() {
+  // Initialize sqflite for desktop platforms
+  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+  
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const SmartBillApp());
 }
 
