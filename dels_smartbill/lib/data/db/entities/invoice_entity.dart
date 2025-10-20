@@ -80,4 +80,30 @@ class InvoiceItemEntity {
     this.isDirty = false,
     this.isDeleted = false,
   });
+
+  InvoiceItemEntity copyWith({
+    String? id,
+    String? invoiceId,
+    String? productId,
+    int? quantity,
+    double? unitPrice,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? deletedAtMillis,
+    bool? isDirty,
+    bool? isDeleted,
+  }) {
+    return InvoiceItemEntity(
+      id: id ?? this.id,
+      invoiceId: invoiceId ?? this.invoiceId,
+      productId: productId ?? this.productId,
+      quantity: quantity ?? this.quantity,
+      unitPrice: unitPrice ?? this.unitPrice,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAtMillis: deletedAtMillis ?? this.deletedAtMillis,
+      isDirty: isDirty ?? this.isDirty,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 }

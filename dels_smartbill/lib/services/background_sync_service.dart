@@ -23,7 +23,6 @@ class BackgroundSyncService {
   static Future<void> initialize() async {
     await Workmanager().initialize(
       callbackDispatcher,
-      isInDebugMode: false,
     );
     await Workmanager().registerPeriodicTask(
       'backgroundSyncTaskId',

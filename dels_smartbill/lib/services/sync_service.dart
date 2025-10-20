@@ -22,6 +22,9 @@ class SyncService {
         return;
       }
 
+      final lastSync = await getLastSync();
+      _logger.i('[SyncService] (PUSH) Last sync was at: $lastSync (${DateTime.fromMillisecondsSinceEpoch(lastSync)})');
+
       _logger.i('[SyncService] Starting push sync...');
 
       // 1. Push Products
@@ -36,7 +39,7 @@ class SyncService {
       // 4. Push Invoice Items
       await _pushInvoiceItems(db, supabase);
 
-  _logger.i('[SyncService] Push sync completed successfully');
+      _logger.i('[SyncService] Push sync completed successfully');
     } catch (e, stackTrace) {
       _logger.e('[SyncService] Push sync failed: $e');
       _logger.e('[SyncService] Stack trace: $stackTrace');
@@ -267,35 +270,43 @@ class SyncService {
     }
   }
 
-  Future<void> pull(AppDatabase db) async {
+  Future<void> pull(AppDatabase db, {bool force = false}) async {
+    // Check if Supabase is initialized
+    SupabaseClient? supabase;
     try {
-      // Check if Supabase is initialized
-      SupabaseClient? supabase;
-      try {
-        supabase = Supabase.instance.client;
-      } catch (e) {
-        _logger.w('[SyncService] Supabase not initialized, skipping pull');
-        return;
-      }
+      supabase = Supabase.instance.client;
+    } catch (e) {
+      _logger.w('[SyncService] Supabase not initialized, skipping pull');
+      return;
+    }
 
-      _logger.i('[SyncService] Starting pull sync...');
-      
-      // Get last sync timestamp
-      final lastSync = await getLastSync();
-  _logger.i('[SyncService] Last sync was at: $lastSync (${DateTime.fromMillisecondsSinceEpoch(lastSync)})');
-      
-      // Fetch changes from Supabase
+    _logger.i('[SyncService] Starting pull sync...');
+
+    // 1. Get the SERVER's current time *before* we do anything.
+    final serverTimeResponse = await supabase.rpc('get_server_timestamp');
+    // Accept both int and String from Supabase
+    final syncServerTime = serverTimeResponse is int
+        ? serverTimeResponse
+        : int.tryParse(serverTimeResponse.toString()) ?? 0;
+
+    // 2. Get the last successful sync time.
+    final lastSync = force ? 0 : await getLastSync();
+    _logger.i('[SyncService] Last sync was at: $lastSync (${DateTime.fromMillisecondsSinceEpoch(lastSync)})');
+
+    try {
+      // 3. Pull all changes SINCE the *old* lastSync time.
       await _pullProducts(db, supabase, lastSync);
       await _pullCustomers(db, supabase, lastSync);
       await _pullInvoices(db, supabase, lastSync);
       await _pullInvoiceItems(db, supabase, lastSync);
-      
-      // Update last sync timestamp
-      await updateLastSync(DateTime.now().millisecondsSinceEpoch);
-  _logger.i('[SyncService] Pull sync completed successfully');
+
+      // 4. If all pulls are successful, update lastSync with the server time
+      await updateLastSync(syncServerTime);
+      _logger.i('[SyncService] Pull sync completed successfully. Updated lastSync to: $syncServerTime (${DateTime.fromMillisecondsSinceEpoch(syncServerTime)})');
     } catch (e, stack) {
       _logger.e('[SyncService] Pull sync failed: $e');
       _logger.e('[SyncService] Stack trace: $stack');
+      // Do NOT update lastSync if pull fails
       rethrow;
     }
   }
@@ -304,7 +315,7 @@ class SyncService {
     try {
       _logger.i('[SyncService] Pulling products since $lastSync...');
       
-      // Call RPC function to fetch products since lastSync
+      // Call new RPC function to fetch products since lastSync (in millis)
       final response = await supabase.rpc('fetch_products_since', 
         params: {'since_timestamp': lastSync}
       ) as List<dynamic>;
@@ -335,20 +346,24 @@ class SyncService {
           // Check if product exists locally by ID
           final localProduct = await db.productDao.findById(remoteProduct.id);
           
-          if (localProduct == null) {
-            // New product, insert it
-            await db.productDao.insertOne(remoteProduct);
-            _logger.i('[SyncService] Inserted new product: ${remoteProduct.name}');
-          } else {
-            // Product exists, check for conflicts
-            if (remoteProduct.updatedAt.isAfter(localProduct.updatedAt)) {
-              // Remote is newer, update local
-              await db.productDao.updateOne(remoteProduct);
-              _logger.i('[SyncService] Updated product: ${remoteProduct.name} (remote newer)');
+            if (localProduct == null) {
+              // New product, insert it
+              await db.productDao.insertOne(remoteProduct);
+              _logger.i('[SyncService] Inserted new product: ${remoteProduct.name}');
+              _logger.i('[DEBUG] Local updated_at for product ${remoteProduct.id}: null');
+              _logger.i('[DEBUG] Remote updated_at for product ${remoteProduct.id}: ${remoteProduct.updatedAt}');
             } else {
-              _logger.i('[SyncService] Skipped product: ${remoteProduct.name} (local newer)');
+              // Product exists, log timestamps and check for conflicts
+              _logger.i('[DEBUG] Local updated_at for product ${remoteProduct.id}: ${localProduct.updatedAt}');
+              _logger.i('[DEBUG] Remote updated_at for product ${remoteProduct.id}: ${remoteProduct.updatedAt}');
+              if (remoteProduct.updatedAt.isAfter(localProduct.updatedAt)) {
+                // Remote is newer, update local
+                await db.productDao.updateOne(remoteProduct);
+                _logger.i('[SyncService] Updated product: ${remoteProduct.name} (remote newer)');
+              } else {
+                _logger.i('[SyncService] Skipped product: ${remoteProduct.name} (local newer)');
+              }
             }
-          }
         } catch (e) {
           _logger.e('[SyncService] Failed to process product: $e');
           // Continue with other products

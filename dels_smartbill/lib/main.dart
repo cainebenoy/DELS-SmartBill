@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'features/shell/home_shell.dart';
 import 'features/auth/auth_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -36,7 +37,7 @@ Future<void> main() async {
     await BackgroundSyncService.initialize();
   }
 
-  runApp(const SmartBillApp());
+  runApp(const ProviderScope(child: SmartBillApp()));
 }
 
 class SmartBillApp extends StatefulWidget {

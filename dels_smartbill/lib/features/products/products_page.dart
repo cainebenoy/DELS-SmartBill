@@ -1,252 +1,251 @@
 import 'package:flutter/material.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/format/currency.dart';
-import '../../data/db/app_database.dart';
-import '../../services/auto_sync_service.dart';
 import '../../data/db/entities/product_entity.dart';
+import 'providers/products_provider.dart';
 
-class ProductsPage extends StatefulWidget {
+class ProductsPage extends ConsumerStatefulWidget {
   const ProductsPage({super.key});
 
   @override
-  State<ProductsPage> createState() => _ProductsPageState();
+  ConsumerState<ProductsPage> createState() => _ProductsPageState();
 }
 
-class _ProductsPageState extends State<ProductsPage> {
+class _ProductsPageState extends ConsumerState<ProductsPage> with WidgetsBindingObserver {
   final TextEditingController _searchCtrl = TextEditingController();
 
-  AppDatabase? _db;
-
-  String _query = '';
+  @override
+  void initState() {
+    super.initState();
+    // Listen to app lifecycle changes
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Refresh products when app resumes (after sync completes)
+    if (state == AppLifecycleState.resumed) {
+      // Give sync a moment to complete, then refresh
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          ref.invalidate(productsProvider);
+        }
+      });
+    }
   }
   
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? AppColors.primary : AppColors.backgroundLight;
+    final productsAsync = ref.watch(productsProvider);
 
-    return FutureBuilder<AppDatabase>(
-      future: _initDb(),
-      builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done || !snap.hasData) {
-          return Scaffold(
-            backgroundColor: bg,
-            appBar: AppBar(
-              title: const Text('Products'),
-              centerTitle: true,
-              backgroundColor: (isDark
-                      ? AppColors.primary
-                      : AppColors.backgroundLight)
-                  .withValues(alpha: 0.8),
-              surfaceTintColor: Colors.transparent,
-              elevation: 0,
-            ),
-            body: snap.hasError
-                ? Center(child: Text('Error: ${snap.error}'))
-                : const Center(child: CircularProgressIndicator()),
-          );
-        }
-        final db = snap.data!;
-        return StreamBuilder<List<ProductEntity>>(
-          stream: db.productDao.watchAll(),
-          builder: (context, s) {
-            final items = s.data ?? const [];
-            final filtered = items
-                .where((e) => e.name.toLowerCase().contains(_query.toLowerCase()) ||
-                    e.category.toLowerCase().contains(_query.toLowerCase()))
-                .toList();
-
-            return Scaffold(
-              backgroundColor: bg,
-              appBar: AppBar(
-                title: const Text('Products'),
-                centerTitle: true,
-                backgroundColor: (isDark
-                        ? AppColors.primary
-                        : AppColors.backgroundLight)
-                    .withValues(alpha: 0.8),
-                surfaceTintColor: Colors.transparent,
-                elevation: 0,
+    return Scaffold(
+      backgroundColor: bg,
+      appBar: AppBar(
+        title: const Text('Products'),
+        centerTitle: true,
+        backgroundColor: (isDark
+                ? AppColors.primary
+                : AppColors.backgroundLight)
+            .withValues(alpha: 0.8),
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              ref.invalidate(productsProvider);
+            },
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
+      body: productsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Error: $error', style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  ref.invalidate(productsProvider);
+                },
+                child: const Text('Retry'),
               ),
-              body: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Stack(
-                      children: [
-                        TextField(
-                          controller: _searchCtrl,
-                          onChanged: (v) => setState(() => _query = v),
-                          decoration: InputDecoration(
-                            hintText: 'Search products',
-                            prefixIcon: const Icon(Icons.search),
-                            filled: true,
-                            fillColor: isDark
-                                ? AppColors.secondary.withValues(alpha: 0.2)
-                                : Colors.white.withValues(alpha: 0.7),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: isDark
-                                    ? AppColors.secondary.withValues(alpha: 0.3)
-                                    : const Color(0xFFE7E5E4),
-                              ),
-                            ),
+            ],
+          ),
+        ),
+        data: (productsState) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: Stack(
+                  children: [
+                    TextField(
+                      controller: _searchCtrl,
+                      onChanged: (v) {
+                        ref.read(productsProvider.notifier).setSearchQuery(v);
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search products',
+                        prefixIcon: const Icon(Icons.search),
+                        filled: true,
+                        fillColor: isDark
+                            ? AppColors.secondary.withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.7),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDark
+                                ? AppColors.secondary.withValues(alpha: 0.3)
+                                : const Color(0xFFE7E5E4),
                           ),
                         ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (productsState.filteredProducts.isEmpty)
+                const Expanded(
+                  child: Center(
+                    child: Text(
+                      'No products found.\nTap + to add your first product.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
                     ),
                   ),
-                  Expanded(
-                    child: filtered.isEmpty
-                        ? const Center(
-                            child: Text(
-                              'No products found.\nTap + to add your first product.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 16),
+                )
+              else
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () async {
+                      ref.invalidate(productsProvider);
+                      // Wait for the provider to rebuild
+                      await ref.read(productsProvider.future);
+                    },
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
+                      itemCount: productsState.filteredProducts.length,
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                      final p = productsState.filteredProducts[index];
+                      return ProductTile(
+                        product: p,
+                        onEdit: () async {
+                          final result = await showDialog<ProductDialogResult>(
+                            context: context,
+                            builder: (ctx) => ProductDialog(
+                              initial: ProductDialogResult(
+                                name: p.name,
+                                category: p.category,
+                                price: p.price,
+                              ),
                             ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
-                            itemCount: filtered.length,
-                            separatorBuilder: (context, index) => const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                        final p = filtered[index];
-                        return ProductTile(
-                          p: ProductVM(
-                            name: p.name,
-                            category: p.category,
-                            price: p.price,
-                          ),
-                          onEdit: () async {
-                            final db = await _initDb();
-                            if (!mounted) return;
-                            if (!context.mounted) return;
-                            final result = await showDialog<ProductDialogResult>(
-                              context: context,
-                              builder: (ctx) => ProductDialog(
-                                initial: ProductDialogResult(
-                                  name: p.name,
-                                  category: p.category,
-                                  price: p.price,
-                                ),
+                          );
+                          if (!mounted) return;
+                          if (result != null) {
+                            await ref.read(productsProvider.notifier).updateProduct(
+                              p.copyWith(
+                                name: result.name,
+                                category: result.category,
+                                price: result.price,
                               ),
                             );
                             if (!mounted) return;
-                            if (result != null) {
-                              await db.productDao.updateOne(
-                                ProductEntity(
-                                  id: p.id,
-                                  name: result.name,
-                                  category: result.category,
-                                  price: result.price,
-                                  createdAt: p.createdAt,
-                                  updatedAt: DateTime.now(),
-                                  deletedAtMillis: p.deletedAtMillis,
-                                  isDirty: true,
-                                  isDeleted: p.isDeleted,
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Product updated')),
+                            );
+                          }
+                        },
+                        onDelete: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Delete Product'),
+                              content: const Text('Are you sure you want to delete this product?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(false),
+                                  child: const Text('Cancel'),
                                 ),
-                              );
-                              // Trigger automatic sync after mutation
-                              AutoSyncService().syncAfterMutation();
-                            }
-                          },
-                          onDelete: () async {
-                            final db = await _initDb();
+                                ElevatedButton(
+                                  onPressed: () => Navigator.of(ctx).pop(true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (!mounted) return;
+                          if (confirm == true) {
+                            await ref.read(productsProvider.notifier).deleteProduct(p.id);
                             if (!mounted) return;
-                            if (!context.mounted) return;
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Delete Product'),
-                                content: const Text('Are you sure you want to delete this product?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(ctx).pop(false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.of(ctx).pop(true),
-                                    child: const Text('Delete'),
-                                  ),
-                                ],
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Product deleted'),
+                                action: SnackBarAction(
+                                  label: 'Undo',
+                                  onPressed: () {
+                                    ref.read(productsProvider.notifier).restoreProduct(p.id);
+                                  },
+                                ),
                               ),
                             );
-                            if (!mounted) return;
-                            if (confirm == true) {
-                              await db.productDao.updateOne(
-                                ProductEntity(
-                                  id: p.id,
-                                  name: p.name,
-                                  category: p.category,
-                                  price: p.price,
-                                  createdAt: p.createdAt,
-                                  updatedAt: DateTime.now(),
-                                  deletedAtMillis: DateTime.now().millisecondsSinceEpoch,
-                                  isDirty: true,
-                                  isDeleted: true,
-                                ),
-                              );
-                              // Trigger automatic sync after mutation
-                              AutoSyncService().syncAfterMutation();
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  )
-                ],
-              ),
-              floatingActionButton: FloatingActionButton(
-                onPressed: () async {
-                  final db = await _initDb();
-                  if (!mounted) return;
-                  if (!context.mounted) return;
-                  final result = await showDialog<ProductDialogResult>(
-                    context: context,
-                    builder: (ctx) => ProductDialog(),
-                  );
-                  if (!mounted) return;
-                  if (result != null) {
-                    final now = DateTime.now();
-                    const uuid = Uuid();
-                    await db.productDao.insertOne(
-                      ProductEntity(
-                        id: uuid.v4(),
-                        name: result.name,
-                        category: result.category,
-                        price: result.price,
-                        createdAt: now,
-                        updatedAt: now,
-                        isDirty: true,
-                        isDeleted: false,
-                      ),
-                    );
-                    // Trigger automatic sync after mutation
-                    AutoSyncService().syncAfterMutation();
-                  }
-                },
-                backgroundColor: AppColors.accent,
-                child: const Icon(Icons.add, color: AppColors.primary, size: 28),
-              ),
-
-            );
-          },
-        );
-      },
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final result = await showDialog<ProductDialogResult>(
+            context: context,
+            builder: (ctx) => const ProductDialog(),
+          );
+          if (!mounted) return;
+          if (result != null) {
+            try {
+              await ref.read(productsProvider.notifier).addProduct(
+                name: result.name,
+                category: result.category,
+                price: result.price,
+              );
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Product added')),
+              );
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Failed to add product: $e')),
+              );
+            }
+          }
+        },
+        backgroundColor: AppColors.accent,
+        child: const Icon(Icons.add, color: AppColors.primary, size: 28),
+      ),
     );
-  }
-
-  Future<AppDatabase> _initDb() async {
-    if (_db != null) return _db!;
-    _db = await openAppDatabase();
-    return _db!;
   }
 }
 
@@ -345,13 +344,13 @@ class _ProductDialogState extends State<ProductDialog> {
 }
 
 class ProductTile extends StatelessWidget {
-  final ProductVM p;
+  final ProductEntity product;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const ProductTile({
     super.key,
-    required this.p,
+    required this.product,
     required this.onEdit,
     required this.onDelete,
   });
@@ -381,7 +380,7 @@ class ProductTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  p.name,
+                  product.name,
                   style: TextStyle(
                     fontWeight: FontWeight.w700,
                     color: isDark ? Colors.white : AppColors.primary,
@@ -389,7 +388,7 @@ class ProductTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  p.category,
+                  product.category,
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? AppColors.accent : AppColors.secondary,
@@ -401,7 +400,7 @@ class ProductTile extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Text(
-              CurrencyFormatter.format(p.price),
+              CurrencyFormatter.format(product.price),
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: isDark ? Colors.white : AppColors.primary,
@@ -426,13 +425,4 @@ class ProductTile extends StatelessWidget {
       ),
     );
   }
-}
-
-// Currency formatter replaced by CurrencyFormatter (INR)
-
-class ProductVM {
-  final String name;
-  final String category;
-  final double price;
-  const ProductVM({required this.name, required this.category, required this.price});
 }

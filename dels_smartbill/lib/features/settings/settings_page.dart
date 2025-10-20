@@ -21,7 +21,7 @@ class _SettingsPageState extends State<SettingsPage> {
       syncStatus = 'Syncing...';
     });
     try {
-      // Use AutoSyncService for immediate sync
+      // Use AutoSyncService for immediate sync (push + pull)
       await AutoSyncService().syncNow();
       
       setState(() {
@@ -49,30 +49,59 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ElevatedButton(
-              onPressed: syncing ? null : _syncNow,
-              child: syncing ? const CircularProgressIndicator() : const Text('Sync Now'),
-            ),
-            const SizedBox(height: 16),
-            Text(syncStatus, style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: () async {
-                try {
-                  await AuthService().signOut();
-                  if (!context.mounted) return;
-                  // Pop to root and show sign-in screen
-                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Logout failed: $e')),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+            // Sync Now button - performs bidirectional sync (push + pull)
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: syncing ? null : _syncNow,
+                icon: syncing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.sync),
+                label: Text(syncing ? 'Syncing...' : 'Sync Now'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
               ),
-              child: const Text('Logout'),
+            ),
+            const SizedBox(height: 8),
+            if (syncStatus.isNotEmpty)
+              Text(
+                syncStatus,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: syncStatus.contains('✓') ? Colors.green : Colors.red,
+                    ),
+              ),
+            const SizedBox(height: 32),
+            const Divider(),
+            const SizedBox(height: 16),
+            // Logout button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  try {
+                    await AuthService().signOut();
+                    if (!context.mounted) return;
+                    // Pop to root and show sign-in screen
+                    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                  } catch (e) {
+                    if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Logout failed: $e')),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.logout),
+                label: const Text('Logout'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
             ),
           ],
         ),
