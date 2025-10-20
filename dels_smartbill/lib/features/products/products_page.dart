@@ -32,7 +32,7 @@ class _ProductsPageState extends State<ProductsPage> {
     return FutureBuilder<AppDatabase>(
       future: _initDb(),
       builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
+        if (snap.connectionState != ConnectionState.done || !snap.hasData) {
           return Scaffold(
             backgroundColor: bg,
             appBar: AppBar(
@@ -45,7 +45,9 @@ class _ProductsPageState extends State<ProductsPage> {
               surfaceTintColor: Colors.transparent,
               elevation: 0,
             ),
-            body: const Center(child: CircularProgressIndicator()),
+            body: snap.hasError
+                ? Center(child: Text('Error: ${snap.error}'))
+                : const Center(child: CircularProgressIndicator()),
           );
         }
         final db = snap.data!;
@@ -103,7 +105,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     child: ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                       itemCount: filtered.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 8),
+                      separatorBuilder: (context, index) => const SizedBox(height: 8),
                       itemBuilder: (context, index) {
                         final p = filtered[index];
                         return _ProductTile(
