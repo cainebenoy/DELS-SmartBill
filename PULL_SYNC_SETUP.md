@@ -119,6 +119,41 @@ Each RPC function:
 
 Result: Last-write-wins conflict resolution - Device B's change ($15.00) is kept
 
+## Cleanup & Fresh Start
+
+If you have old dummy data with invalid IDs (e.g., "p1", "p2", "p3") or want to start fresh:
+
+### Clean Local Database
+
+**Windows PowerShell:**
+```powershell
+Remove-Item "c:\Users\caine\OneDrive\Desktop\DELS SmartBill\dels_smartbill\.dart_tool\sqflite_common_ffi\databases\smartbill.db" -Force
+```
+
+**macOS/Linux:**
+```bash
+rm .dart_tool/sqflite_common_ffi/databases/smartbill.db
+```
+
+### Clean Supabase Data
+
+Run this SQL in Supabase SQL Editor (or use `supabase/cleanup_data.sql`):
+
+```sql
+-- Delete all data (careful - this is permanent!)
+DELETE FROM invoice_items;
+DELETE FROM invoices;
+DELETE FROM customers;
+DELETE FROM products;
+```
+
+### Restart the App
+
+After cleaning both local and remote data:
+1. Restart your app - it will create a fresh database
+2. Start creating products with proper UUIDs
+3. Sync should work perfectly!
+
 ## Troubleshooting
 
 ### Error: "function fetch_products_since does not exist"
@@ -159,6 +194,26 @@ await SyncService().updateLastSync(0); // Reset to fetch everything
 - Check that primary key constraints exist in both Floor and Supabase
 - Verify entity IDs are proper UUIDs (not Flutter's UniqueKey format)
 - Clear local database and re-sync from scratch
+
+### Error: "invalid input syntax for type uuid: 'p1'"
+
+**Cause**: Old dummy data in local database with invalid IDs (e.g., "p1", "p2", "p3")
+
+**Solution**:
+1. Delete local database (see "Cleanup & Fresh Start" section above)
+2. Delete all data from Supabase tables
+3. Restart app and create new products with proper UUIDs
+4. All new products will use `Uuid().v4()` which generates valid UUIDs
+
+### Products deleted in app still visible in Supabase
+
+**Cause**: Soft delete sync is working, but you need to check `deleted_at` column
+
+**Solution**:
+- Deleted products have `deleted_at` timestamp set in Supabase
+- They're filtered out in the app by `WHERE isDeleted = 0` queries
+- In Supabase Table Editor, look for the `deleted_at` column - it should have a timestamp
+- To permanently delete: `DELETE FROM products WHERE deleted_at IS NOT NULL;`
 
 ## Console Output
 
