@@ -61,6 +61,7 @@ class SyncService {
                 : DateTime.now().toIso8601String(),
             'updated_at': product.updatedAt.toIso8601String(),
           }).eq('id', product.id);
+          print('[SyncService] Soft deleted product: ${product.name} (set deleted_at timestamp)');
         } else {
           // Upsert product to Supabase
           await supabase.from('products').upsert({
@@ -72,6 +73,7 @@ class SyncService {
             'updated_at': product.updatedAt.toIso8601String(),
             'deleted_at': null,
           });
+          print('[SyncService] Pushed product: ${product.name}');
         }
 
         // Clear isDirty flag
