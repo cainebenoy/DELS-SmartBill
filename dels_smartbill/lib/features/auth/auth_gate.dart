@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/supabase/supabase_client.dart';
+import '../../services/auth_service.dart';
 
 /// A minimal AuthGate that, when wired, can control access based on Supabase session.
 /// Not enabled by default to avoid impacting current app flow and tests.
@@ -52,10 +53,20 @@ class _AuthGateState extends State<AuthGate> {
               onPressed: () async {
                 await SupabaseInit.ensureInitialized();
                 if (!context.mounted) return;
-                // Placeholder: implement Google sign-in later.
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Auth not yet wired.')),
-                );
+                try {
+                  // Call AuthService to sign in with Google
+                  await AuthService().signInWithGoogle();
+                  // Listen for session change
+                  Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+                    setState(() {
+                      _session = Supabase.instance.client.auth.currentSession;
+                    });
+                  });
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Sign-in failed: $e')),
+                  );
+                }
               },
               child: const Text('Sign in with Google'),
             ),

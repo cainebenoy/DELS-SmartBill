@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/design/app_colors.dart';
 import '../../services/auto_sync_service.dart';
+import '../../services/auth_service.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -54,7 +55,25 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
             const SizedBox(height: 16),
             Text(syncStatus, style: Theme.of(context).textTheme.bodyMedium),
-            // ...existing settings controls...
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  await AuthService().signOut();
+                  if (!context.mounted) return;
+                  // Pop to root and show sign-in screen
+                  Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Logout failed: $e')),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+              ),
+              child: const Text('Logout'),
+            ),
           ],
         ),
       ),

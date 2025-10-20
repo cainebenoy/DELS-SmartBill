@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../data/db/app_database.dart';
 import '../../data/db/entities/invoice_entity.dart';
 
@@ -45,7 +46,11 @@ class _DashboardPageState extends State<DashboardPage> {
           .length;
       recentInvoices = allInvoices.take(10).toList();
     } catch (e) {
-      error = 'Failed to load metrics: $e';
+      if (kIsWeb) {
+        error = 'Database not available on web. Please use Android/iOS/Desktop app.';
+      } else {
+        error = 'Failed to load metrics: $e';
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -66,18 +71,29 @@ class _DashboardPageState extends State<DashboardPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(error!, style: const TextStyle(color: Colors.red)),
+                      const Icon(Icons.info_outline, size: 64, color: Colors.orange),
                       const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            loading = true;
-                            error = null;
-                          });
-                          _loadMetrics();
-                        },
-                        child: const Text('Retry'),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(
+                          error!,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          textAlign: TextAlign.center,
+                        ),
                       ),
+                      if (!kIsWeb) ...[
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              loading = true;
+                              error = null;
+                            });
+                            _loadMetrics();
+                          },
+                          child: const Text('Retry'),
+                        ),
+                      ],
                     ],
                   ),
                 )

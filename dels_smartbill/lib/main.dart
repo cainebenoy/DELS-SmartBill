@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'features/shell/home_shell.dart';
 import 'features/auth/auth_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,18 +7,35 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 import 'core/supabase/supabase_client.dart';
 import 'services/auto_sync_service.dart';
+import 'services/background_sync_service.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
-  // Initialize sqflite for desktop platforms
-  if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load .env file
+  try {
+    await dotenv.load(fileName: ".env");
+  } catch (e) {
+    // .env file not found or error loading, continue without it
+    // This allows the app to still work with --dart-define flags
+  }
+
+  // Initialize sqflite for desktop platforms (not web)
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
-  WidgetsFlutterBinding.ensureInitialized();
-  // Initialize Supabase if env vars are provided via --dart-define
+
+  // Initialize Supabase if env vars are provided via .env or --dart-define
   await SupabaseInit.ensureInitialized();
+
+  // Initialize background sync (only on Android/iOS, not web or desktop)
+  if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+    await BackgroundSyncService.initialize();
+  }
+
   runApp(const SmartBillApp());
 }
 

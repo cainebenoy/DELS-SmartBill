@@ -5,6 +5,7 @@ import '../../data/db/entities/customer_entity.dart';
 import '../../data/db/entities/product_entity.dart';
 import '../../data/db/entities/invoice_entity.dart';
 import '../../services/auto_sync_service.dart';
+import '../../services/auth_service.dart';
 
 class InvoicePage extends StatefulWidget {
   const InvoicePage({super.key});
@@ -182,7 +183,7 @@ class _InvoicePageState extends State<InvoicePage> {
                         invoiceNumber: 'LOCAL-$invoiceId',
                         customerId: selectedCustomer!.id,
                         totalAmount: total,
-                        createdByUserId: 'local',
+                        createdByUserId: AuthService().userId ?? 'local',
                         createdAt: now,
                         updatedAt: now,
                         isDirty: true,
