@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../../data/db/app_database.dart';
 import '../../data/db/entities/customer_entity.dart';
 import '../../data/db/entities/product_entity.dart';
@@ -179,7 +180,8 @@ class _InvoicePageState extends State<InvoicePage> {
                         return;
                       }
                       final db = await openAppDatabase();
-                      final invoiceId = UniqueKey().toString();
+                      const uuid = Uuid();
+                      final invoiceId = uuid.v4();
                       final now = DateTime.now();
                       final invoice = InvoiceEntity(
                         id: invoiceId,
@@ -194,7 +196,7 @@ class _InvoicePageState extends State<InvoicePage> {
                       );
                       await db.invoiceDao.insertOne(invoice);
                       final items = cart.map((item) => InvoiceItemEntity(
-                        id: UniqueKey().toString(),
+                        id: uuid.v4(),
                         invoiceId: invoiceId,
                         productId: item.product.id,
                         quantity: item.quantity,
@@ -294,8 +296,9 @@ class _AddCustomerDialogState extends State<_AddCustomerDialog> {
         ElevatedButton(
           onPressed: () {
             if (_formKey.currentState?.validate() ?? false) {
+              const uuid = Uuid();
               Navigator.of(context).pop(CustomerEntity(
-                id: UniqueKey().toString(),
+                id: uuid.v4(),
                 name: _nameCtrl.text.trim(),
                 phone: _phoneCtrl.text.trim(),
                 email: _emailCtrl.text.trim(),

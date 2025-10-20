@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/format/currency.dart';
 import '../../data/db/app_database.dart';
@@ -218,9 +219,10 @@ class _ProductsPageState extends State<ProductsPage> {
                   if (!mounted) return;
                   if (result != null) {
                     final now = DateTime.now();
+                    const uuid = Uuid();
                     await db.productDao.insertOne(
                       ProductEntity(
-                        id: UniqueKey().toString(),
+                        id: uuid.v4(),
                         name: result.name,
                         category: result.category,
                         price: result.price,
