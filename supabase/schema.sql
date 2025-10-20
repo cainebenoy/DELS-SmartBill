@@ -71,10 +71,10 @@ alter table invoices enable row level security;
 alter table invoice_items enable row level security;
 
 -- Authenticated users get full access
-create policy if not exists "Allow all authenticated users" on products for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-create policy if not exists "Allow all authenticated users" on customers for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-create policy if not exists "Allow all authenticated users" on invoices for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
-create policy if not exists "Allow all authenticated users" on invoice_items for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "Allow all authenticated users" on products for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "Allow all authenticated users" on customers for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "Allow all authenticated users" on invoices for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
+create policy "Allow all authenticated users" on invoice_items for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 -- Timestamp trigger function
 create or replace function set_timestamp()

@@ -4,8 +4,9 @@ import 'features/auth/auth_gate.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
+import 'core/supabase/supabase_client.dart';
 
-void main() {
+Future<void> main() async {
   // Initialize sqflite for desktop platforms
   if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
     sqfliteFfiInit();
@@ -13,6 +14,8 @@ void main() {
   }
   
   WidgetsFlutterBinding.ensureInitialized();
+  // Initialize Supabase if env vars are provided via --dart-define
+  await SupabaseInit.ensureInitialized();
   runApp(const SmartBillApp());
 }
 
