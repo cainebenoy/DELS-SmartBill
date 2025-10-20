@@ -24,4 +24,28 @@ class ProductEntity {
     this.isDirty = false,
     this.isDeleted = false,
   });
+
+  ProductEntity copyWith({
+    String? id,
+    String? name,
+    String? category,
+    double? price,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? deletedAtMillis,
+    bool? isDirty,
+    bool? isDeleted,
+  }) {
+    return ProductEntity(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      price: price ?? this.price,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAtMillis: deletedAtMillis ?? this.deletedAtMillis,
+      isDirty: isDirty ?? this.isDirty,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 }

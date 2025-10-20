@@ -26,6 +26,32 @@ class InvoiceEntity {
     this.isDirty = false,
     this.isDeleted = false,
   });
+
+  InvoiceEntity copyWith({
+    String? id,
+    String? invoiceNumber,
+    String? customerId,
+    double? totalAmount,
+    String? createdByUserId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    int? deletedAtMillis,
+    bool? isDirty,
+    bool? isDeleted,
+  }) {
+    return InvoiceEntity(
+      id: id ?? this.id,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      customerId: customerId ?? this.customerId,
+      totalAmount: totalAmount ?? this.totalAmount,
+      createdByUserId: createdByUserId ?? this.createdByUserId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAtMillis: deletedAtMillis ?? this.deletedAtMillis,
+      isDirty: isDirty ?? this.isDirty,
+      isDeleted: isDeleted ?? this.isDeleted,
+    );
+  }
 }
 
 @entity
