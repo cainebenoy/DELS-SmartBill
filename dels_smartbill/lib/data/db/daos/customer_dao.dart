@@ -9,6 +9,9 @@ abstract class CustomerDao {
   @Query('SELECT * FROM CustomerEntity WHERE isDeleted = 0 AND (name LIKE :q OR phone LIKE :q OR email LIKE :q) ORDER BY name ASC')
   Future<List<CustomerEntity>> search(String q);
 
+  @Query('SELECT * FROM CustomerEntity WHERE isDirty = 1')
+  Future<List<CustomerEntity>> findDirty();
+
   @Query('SELECT COUNT(*) FROM CustomerEntity')
   Future<int?> countAll();
 

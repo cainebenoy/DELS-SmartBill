@@ -9,6 +9,9 @@ abstract class ProductDao {
   @Query('SELECT * FROM ProductEntity WHERE isDeleted = 0 AND (name LIKE :q OR category LIKE :q) ORDER BY name ASC')
   Future<List<ProductEntity>> search(String q);
 
+  @Query('SELECT * FROM ProductEntity WHERE isDirty = 1')
+  Future<List<ProductEntity>> findDirty();
+
   @Query('SELECT COUNT(*) FROM ProductEntity')
   Future<int?> countAll();
 

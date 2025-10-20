@@ -9,6 +9,9 @@ abstract class InvoiceDao {
   @Query('SELECT * FROM InvoiceEntity WHERE isDeleted = 0 AND (invoiceNumber LIKE :q) ORDER BY createdAt DESC')
   Future<List<InvoiceEntity>> search(String q);
 
+  @Query('SELECT * FROM InvoiceEntity WHERE isDirty = 1')
+  Future<List<InvoiceEntity>> findDirty();
+
   @Query('SELECT COUNT(*) FROM InvoiceEntity')
   Future<int?> countAll();
 
@@ -35,6 +38,9 @@ abstract class InvoiceItemDao {
 
   @Query('SELECT * FROM InvoiceItemEntity WHERE isDeleted = 0 ORDER BY createdAt ASC')
   Future<List<InvoiceItemEntity>> getAll();
+
+  @Query('SELECT * FROM InvoiceItemEntity WHERE isDirty = 1')
+  Future<List<InvoiceItemEntity>> findDirty();
 
   @insert
   Future<void> insertAll(List<InvoiceItemEntity> items);
