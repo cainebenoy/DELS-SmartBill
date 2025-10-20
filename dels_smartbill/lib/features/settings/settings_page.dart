@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/design/app_colors.dart';
-import '../../services/sync_service.dart';
-import '../../data/db/app_database.dart';
+import '../../services/auto_sync_service.dart';
 
 
 class SettingsPage extends StatefulWidget {
@@ -21,19 +20,8 @@ class _SettingsPageState extends State<SettingsPage> {
       syncStatus = 'Syncing...';
     });
     try {
-      final db = await openAppDatabase();
-      
-      // Push local changes to Supabase
-      setState(() {
-        syncStatus = 'Pushing local changes...';
-      });
-      await SyncService().push(db);
-      
-      // Pull remote changes from Supabase
-      setState(() {
-        syncStatus = 'Pulling remote changes...';
-      });
-      await SyncService().pull(db);
+      // Use AutoSyncService for immediate sync
+      await AutoSyncService().syncNow();
       
       setState(() {
         syncStatus = 'Sync successful! ✓';

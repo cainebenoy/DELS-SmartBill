@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'dart:io';
 import 'core/supabase/supabase_client.dart';
+import 'services/auto_sync_service.dart';
 
 Future<void> main() async {
   // Initialize sqflite for desktop platforms
@@ -19,8 +20,38 @@ Future<void> main() async {
   runApp(const SmartBillApp());
 }
 
-class SmartBillApp extends StatelessWidget {
+class SmartBillApp extends StatefulWidget {
   const SmartBillApp({super.key});
+
+  @override
+  State<SmartBillApp> createState() => _SmartBillAppState();
+}
+
+class _SmartBillAppState extends State<SmartBillApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    // Listen to app lifecycle changes
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    AutoSyncService().dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    // Sync when app resumes from background
+    if (state == AppLifecycleState.resumed) {
+      print('[App] App resumed, triggering sync...');
+      AutoSyncService().syncNow();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

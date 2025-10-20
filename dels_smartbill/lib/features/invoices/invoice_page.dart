@@ -4,7 +4,7 @@ import '../../data/db/app_database.dart';
 import '../../data/db/entities/customer_entity.dart';
 import '../../data/db/entities/product_entity.dart';
 import '../../data/db/entities/invoice_entity.dart';
-import '../../services/sync_service.dart';
+import '../../services/auto_sync_service.dart';
 
 class InvoicePage extends StatefulWidget {
   const InvoicePage({super.key});
@@ -14,10 +14,6 @@ class InvoicePage extends StatefulWidget {
 }
 
 class _InvoicePageState extends State<InvoicePage> {
-  Future<bool> _isOnline() async {
-    // For now, always return true
-    return true;
-  }
   CustomerEntity? selectedCustomer;
   List<CustomerEntity> customers = [];
   List<ProductEntity> products = [];
@@ -88,10 +84,8 @@ class _InvoicePageState extends State<InvoicePage> {
                               if (newCustomer != null) {
                                 final db = await openAppDatabase();
                                 await db.customerDao.insertOne(newCustomer);
-                                // Trigger sync after mutation
-                                if (await _isOnline()) {
-                                  await SyncService().push(db);
-                                }
+                                // Trigger automatic sync after mutation
+                                AutoSyncService().syncAfterMutation();
                                 setState(() {
                                   customers.add(newCustomer);
                                   selectedCustomer = newCustomer;
@@ -207,10 +201,8 @@ class _InvoicePageState extends State<InvoicePage> {
                         isDeleted: false,
                       )).toList();
                       await db.invoiceItemDao.insertAll(items);
-                      // Trigger sync after mutation
-                      if (await _isOnline()) {
-                        await SyncService().push(db);
-                      }
+                      // Trigger automatic sync after mutation
+                      AutoSyncService().syncAfterMutation();
                       if (!mounted || context.mounted == false) return;
                       setState(() {
                         cart.clear();

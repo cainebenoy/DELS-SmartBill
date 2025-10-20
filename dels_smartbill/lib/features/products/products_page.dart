@@ -3,7 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../../core/design/app_colors.dart';
 import '../../core/format/currency.dart';
 import '../../data/db/app_database.dart';
-import '../../services/sync_service.dart';
+import '../../services/auto_sync_service.dart';
 import '../../data/db/entities/product_entity.dart';
 
 class ProductsPage extends StatefulWidget {
@@ -153,10 +153,8 @@ class _ProductsPageState extends State<ProductsPage> {
                                   isDeleted: p.isDeleted,
                                 ),
                               );
-                              // Trigger sync after mutation
-                              if (await _isOnline()) {
-                                await SyncService().push(db);
-                              }
+                              // Trigger automatic sync after mutation
+                              AutoSyncService().syncAfterMutation();
                             }
                           },
                           onDelete: () async {
@@ -195,10 +193,8 @@ class _ProductsPageState extends State<ProductsPage> {
                                   isDeleted: true,
                                 ),
                               );
-                              // Trigger sync after mutation
-                              if (await _isOnline()) {
-                                await SyncService().push(db);
-                              }
+                              // Trigger automatic sync after mutation
+                              AutoSyncService().syncAfterMutation();
                             }
                           },
                         );
@@ -232,10 +228,8 @@ class _ProductsPageState extends State<ProductsPage> {
                         isDeleted: false,
                       ),
                     );
-                    // Trigger sync after mutation
-                    if (await _isOnline()) {
-                      await SyncService().push(db);
-                    }
+                    // Trigger automatic sync after mutation
+                    AutoSyncService().syncAfterMutation();
                   }
                 },
                 backgroundColor: AppColors.accent,
@@ -253,11 +247,6 @@ class _ProductsPageState extends State<ProductsPage> {
     if (_db != null) return _db!;
     _db = await openAppDatabase();
     return _db!;
-  }
-
-  Future<bool> _isOnline() async {
-  // For now, always return true
-  return true;
   }
 }
 
